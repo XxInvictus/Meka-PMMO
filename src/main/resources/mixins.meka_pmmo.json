@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "com.xxinvictus.meka_pmmo.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.meka_pmmo.refmap.json",
+  "mixins": [
+    "CachedRecipeMixin",
+    "OneInputCachedRecipeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
