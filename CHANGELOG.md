@@ -26,4 +26,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mekanism: 10.4.16.80
 - PMMO: 1.20.1-1.7.39
 
-[1.0.0]: https://github.com/yourusername/Meka-PMMO/releases/tag/1.20.1-1.0.0
+[1.0.0]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.0.0
