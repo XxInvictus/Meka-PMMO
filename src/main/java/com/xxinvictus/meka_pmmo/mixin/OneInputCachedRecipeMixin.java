@@ -72,46 +72,80 @@ public abstract class OneInputCachedRecipeMixin<RECIPE extends ItemStackToItemSt
         require = 0
     )
     private void onFinishProcessing(int operations, CallbackInfo ci) {
-        // Cast to access the recipe
-        @SuppressWarnings("unchecked")
-        CachedRecipe<ItemStackToItemStackRecipe> self = (CachedRecipe<ItemStackToItemStackRecipe>) (Object) this;
-        ItemStackToItemStackRecipe recipe = self.getRecipe();
-        
-        // Only process smelting recipes
-        if (!(recipe instanceof SmeltingIRecipe)) {
-            return;
-        }
+        try {
+            // Cast to access the recipe - use raw CachedRecipe to avoid type issues
+            CachedRecipe<?> self = (CachedRecipe<?>) (Object) this;
+            Object recipeObj = self.getRecipe();
+            
+            // Check if this is a supported recipe type
+            if (!isSupportedRecipe(recipeObj)) {
+                return;
+            }
+            
+            // Safe to cast now that we've checked the type
+            ItemStackToItemStackRecipe recipe = (ItemStackToItemStackRecipe) recipeObj;
 
-        // Get the tile entity context
-        BlockEntity tileEntity = getProcessingTileEntity();
-        if (tileEntity == null) {
-            return;
-        }
+            // Get the tile entity context
+            BlockEntity tileEntity = getProcessingTileEntity();
+            if (tileEntity == null) {
+                return;
+            }
 
-        Level level = tileEntity.getLevel();
-        BlockPos pos = tileEntity.getBlockPos();
-        
-        if (level == null || pos == null) {
-            return;
-        }
+            Level level = tileEntity.getLevel();
+            BlockPos pos = tileEntity.getBlockPos();
+            
+            if (level == null || pos == null) {
+                return;
+            }
 
-        // Get recipe output
-        ItemStack output = recipe.getResultItem(level.registryAccess());
-        
-        // Use the captured input from HEAD injection
-        ItemStack input = capturedInput;
-        if (input.isEmpty()) {
-            // Fallback to recipe ingredients
-            if (!recipe.getIngredients().isEmpty() && !recipe.getIngredients().get(0).isEmpty()) {
-                ItemStack[] matchingStacks = recipe.getIngredients().get(0).getItems();
-                if (matchingStacks.length > 0) {
-                    input = matchingStacks[0];
+            // Get recipe output
+            ItemStack output = recipe.getResultItem(level.registryAccess());
+            
+            // Use the captured input from HEAD injection
+            ItemStack input = capturedInput;
+            if (input.isEmpty()) {
+                // Fallback to recipe ingredients
+                if (!recipe.getIngredients().isEmpty() && !recipe.getIngredients().get(0).isEmpty()) {
+                    ItemStack[] matchingStacks = recipe.getIngredients().get(0).getItems();
+                    if (matchingStacks.length > 0) {
+                        input = matchingStacks[0];
+                    }
                 }
             }
+            
+            // Call our handler with the smelting data
+            SmeltTranslationHandler.handleSmeltOperation(input, output, level, pos);
+        } catch (ClassCastException e) {
+            // Recipe is not ItemStackToItemStackRecipe - silently ignore
+            // This happens with other machine types like Electrolytic Separator
+        } catch (Exception e) {
+            // Log unexpected errors but don't crash
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO").error("Unexpected error in OneInputCachedRecipeMixin", e);
+        }
+    }
+    
+    /**
+     * Check if the recipe is a supported type for XP rewards.
+     * Add more recipe types here to extend support to other machines.
+     * 
+     * @param recipeObj The recipe object to check
+     * @return true if the recipe type is supported
+     */
+    private boolean isSupportedRecipe(Object recipeObj) {
+        // Currently only supporting smelting recipes (Energized Smelter)
+        if (recipeObj instanceof SmeltingIRecipe) {
+            return true;
         }
         
-        // Call our handler with the smelting data
-        SmeltTranslationHandler.handleSmeltOperation(input, output, level, pos);
+        // TODO: Add support for other machine types
+        // Examples:
+        // - CrushingIRecipe (Crusher)
+        // - EnrichingIRecipe (Enrichment Chamber)
+        // - CompressingIRecipe (Osmium Compressor)
+        // - PurifyingIRecipe (Purification Chamber)
+        // - InjectingIRecipe (Chemical Injection Chamber)
+        
+        return false;
     }
 
     /**
