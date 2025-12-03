@@ -20,6 +20,8 @@ import java.util.UUID;
 /**
  * Mixin to intercept Digital Miner's block breaking operations.
  * Fires BlockEvent.BreakEvent so PMMO's BreakHandler grants XP to the owner.
+ * 
+ * This mixin can be disabled via config (mekapmmo.enableDigitalMinerXP=false).
  */
 @Mixin(value = TileEntityDigitalMiner.class, remap = false)
 public abstract class DigitalMinerMixin {
@@ -32,13 +34,12 @@ public abstract class DigitalMinerMixin {
      * the owner and grant them XP, similar to how FurnaceHandler works.
      */
     @Inject(
-        method = "getDrops(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)Ljava/util/List;",
+        method = "getDrops(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)Ljava/util/List;",
         at = @At("HEAD"),
         remap = false,
         require = 0  // Optional - won't crash if method not found
     )
     private void onGetDrops(
-        ServerLevel level,
         BlockState state,
         BlockPos minedBlockPos,  // This is the MINED block position (remote)
         CallbackInfoReturnable<List<ItemStack>> cir
@@ -49,13 +50,20 @@ public abstract class DigitalMinerMixin {
                 return;
             }
             
-            // Only process on server side
-            if (level == null || level.isClientSide()) {
+            // Get the Digital Miner tile entity
+            TileEntityDigitalMiner self = (TileEntityDigitalMiner) (Object) this;
+            
+            // Get the level from the tile entity
+            if (self.getLevel() == null || !(self.getLevel() instanceof ServerLevel)) {
                 return;
             }
             
-            // Get the Digital Miner tile entity
-            TileEntityDigitalMiner self = (TileEntityDigitalMiner) (Object) this;
+            ServerLevel level = (ServerLevel) self.getLevel();
+            
+            // Only process on server side
+            if (level.isClientSide()) {
+                return;
+            }
             
             // Get the owner UUID
             UUID ownerUUID = self.getOwnerUUID();
@@ -79,8 +87,9 @@ public abstract class DigitalMinerMixin {
                 player = new ServerPlayer(level.getServer(), level, profile.get());
             }
             
-            // Fire BlockEvent.BreakEvent at the MINER's position
-            // This is the key - PMMO's chunk tracking will find the owner at minerPos
+            // Fire BlockEvent.BreakEvent at the MINER's position with the MINED block's state
+            // Position: miner's location (for PMMO chunk tracking to find owner)
+            // State: the actual block being mined (for XP calculation)
             BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(level, minerPos, state, player);
             
             // Post the event to Forge's event bus
@@ -89,6 +98,12 @@ public abstract class DigitalMinerMixin {
             
             // Note: We don't check if event was canceled - we're just notifying PMMO
             // The Digital Miner already did its own permission checks
+            
+            if (Config.enableDebugLogging) {
+                org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                    .debug("Digital Miner XP: Fired BreakEvent for {} at miner pos {} (mined block at {})", 
+                        state.getBlock().getName().getString(), minerPos, minedBlockPos);
+            }
             
         } catch (Exception e) {
             // Silently fail to prevent crashes
