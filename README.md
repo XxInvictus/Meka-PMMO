@@ -105,6 +105,16 @@ To customize XP rewards:
 - 🔄 Other single-input Mekanism machines (Crusher, Enrichment Chamber, etc.)
 - 🔄 Multi-input recipes (Combiner, Chemical Infuser, etc.)
 
+## CI/CD & Releases
+
+This project uses GitHub Actions for automated building, testing, and publishing. See [CI-CD-SETUP.md](CI-CD-SETUP.md) for detailed CI/CD documentation.
+
+**Automated Workflows:**
+- ✅ Automated testing on development branch
+- ✅ Automated releases when merging to release branch
+- ✅ Multi-platform publishing (GitHub, Modrinth, CurseForge)
+- ✅ Version validation to prevent release errors
+
 ## Development
 
 ### Building from Source
