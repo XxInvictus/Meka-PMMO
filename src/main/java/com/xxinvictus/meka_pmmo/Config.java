@@ -21,13 +21,19 @@ public class Config
             .comment("Enable debug logging for Mekanism XP integration")
             .define("enableDebugLogging", false);
 
+    private static final ForgeConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_XP = BUILDER
+            .comment("Enable XP rewards from Digital Miner mining operations")
+            .define("enableDigitalMinerXP", true);
+
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static boolean enableDebugLogging;
+    public static boolean enableDigitalMinerXP;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
         enableDebugLogging = ENABLE_DEBUG_LOGGING.get();
+        enableDigitalMinerXP = ENABLE_DIGITAL_MINER_XP.get();
     }
 }

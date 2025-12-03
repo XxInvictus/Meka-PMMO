@@ -8,7 +8,7 @@ A compatibility bridge between Mekanism and Project MMO (PMMO) that enables XP r
 
 ## Overview
 
-Meka-PMMO provides seamless integration between Mekanism's machines and PMMO's skill system. Players now earn XP when using Mekanism's Energized Smelter, just as they would with vanilla furnaces.
+Meka-PMMO provides seamless integration between Mekanism's machines and PMMO's skill system. Players now earn SMELTING XP when using Mekanism's Energized Smelter and MINING XP when using the Digital Miner, just as they would with vanilla furnaces and manual mining.
 
 ### The Problem
 
@@ -25,10 +25,12 @@ Meka-PMMO uses advanced mixin-based interception to:
 
 ## Features
 
-✅ **Energized Smelter XP** - Players receive XP when smelting recipes complete  
+✅ **Energized Smelter XP** - Players receive SMELTING XP when recipes complete  
+✅ **Digital Miner XP** - Machine owners receive MINING XP for blocks mined  
 ✅ **PMMO Integration** - Works with PMMO's skill system and configuration  
 ✅ **Non-invasive** - Uses mixins, no modification to Mekanism or PMMO required  
-✅ **Accurate Tracking** - Captures actual input items before consumption  
+✅ **Accurate Tracking** - Captures actual input items and block states  
+✅ **Configurable** - Enable/disable individual features via config  
 ✅ **Server-side Only** - XP processing happens server-side as expected
 
 ## Installation
@@ -66,11 +68,24 @@ Meka-PMMO uses Forge's Mixin system to intercept Mekanism's recipe processing:
 
 ## Configuration
 
-Meka-PMMO itself requires no configuration. XP amounts and skill assignments are controlled entirely by PMMO's configuration files.
+Meka-PMMO provides configuration options in `config/meka_pmmo-common.toml`:
+
+```toml
+# Enable debug logging for Mekanism XP integration
+enableDebugLogging = false
+
+# Enable XP rewards from Digital Miner mining operations
+# Requires restart to fully disable (prevents mixin loading)
+enableDigitalMinerXP = true
+```
+
+**Note:** Disabling features requires a full game restart to prevent the mixins from loading.
+
+XP amounts and skill assignments are controlled entirely by PMMO's configuration files.
 
 To customize XP rewards:
 
-1. Configure PMMO's smelting XP values in PMMO's config
+1. Configure PMMO's smelting and mining XP values in PMMO's config
 2. Adjust PMMO's skill requirements as desired
 3. Meka-PMMO will automatically use those settings
 
@@ -78,7 +93,8 @@ To customize XP rewards:
 
 ### Supported Machines
 
-- ✅ Energized Smelter
+- ✅ Energized Smelter (SMELTING XP)
+- ✅ Digital Miner (MINING XP)
 
 ### Planned Support
 
