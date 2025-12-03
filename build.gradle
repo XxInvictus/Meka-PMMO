@@ -6,7 +6,7 @@ plugins {
 }
 
 version = "${minecraft_version}-${mod_version}"
-group = "${mod_group_id}.${mod_id}"
+group = "${mod_group_id}"
 
 base {
     archivesName = mod_id

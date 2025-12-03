@@ -37,6 +37,24 @@ public class SmeltTranslationHandler {
         }
 
         // Fire PMMO's FurnaceBurnEvent to grant experience
-        MinecraftForge.EVENT_BUS.post(new FurnaceBurnEvent(input, level, pos));
+        // Wrapped in try-catch to handle potential PMMO API changes gracefully
+        try {
+            FurnaceBurnEvent event = new FurnaceBurnEvent(input, level, pos);
+            MinecraftForge.EVENT_BUS.post(event);
+        } catch (NoSuchMethodError e) {
+            // PMMO's FurnaceBurnEvent constructor signature changed
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                .error("FurnaceBurnEvent constructor signature mismatch. PMMO version may be incompatible. " +
+                       "Expected: FurnaceBurnEvent(ItemStack, Level, BlockPos)", e);
+        } catch (NoClassDefFoundError e) {
+            // FurnaceBurnEvent class no longer exists in PMMO
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                .error("FurnaceBurnEvent class not found. PMMO may have removed this API. " +
+                       "Meka-PMMO needs to be updated for this PMMO version.", e);
+        } catch (Exception e) {
+            // Any other unexpected error
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                .error("Unexpected error while posting FurnaceBurnEvent to PMMO", e);
+        }
     }
 }
