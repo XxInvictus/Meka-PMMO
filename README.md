@@ -74,6 +74,10 @@ Meka-PMMO provides configuration options in `config/meka_pmmo-common.toml`:
 # Enable debug logging for Mekanism XP integration
 enableDebugLogging = false
 
+# Enable XP rewards from Energized Smelter smelting operations
+# Requires restart to fully disable (prevents mixin loading)
+enableEnergizedSmelterXP = true
+
 # Enable XP rewards from Digital Miner mining operations
 # Requires restart to fully disable (prevents mixin loading)
 enableDigitalMinerXP = true

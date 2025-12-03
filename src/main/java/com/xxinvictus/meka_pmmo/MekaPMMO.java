@@ -35,21 +35,24 @@ public class MekaPMMO
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         
-        // Set system property for mixin plugin based on config
-        // This allows early disabling of DigitalMinerMixin before mixin application
+        // Set system properties for mixin plugin based on config
+        // This allows early disabling of mixins before mixin application
         // Default to true if config not yet loaded
         try {
-            // Try to read config value if already loaded
+            // Try to read config values if already loaded
+            boolean enableEnergizedSmelterXP = Config.SPEC.isLoaded() ? Config.enableEnergizedSmelterXP : true;
             boolean enableDigitalMinerXP = Config.SPEC.isLoaded() ? Config.enableDigitalMinerXP : true;
+            System.setProperty("mekapmmo.enableEnergizedSmelterXP", String.valueOf(enableEnergizedSmelterXP));
             System.setProperty("mekapmmo.enableDigitalMinerXP", String.valueOf(enableDigitalMinerXP));
         } catch (Exception e) {
             // Config not loaded yet, default to true
+            System.setProperty("mekapmmo.enableEnergizedSmelterXP", "true");
             System.setProperty("mekapmmo.enableDigitalMinerXP", "true");
         }
         
         LOGGER.info("=".repeat(50));
         LOGGER.info("Meka-PMMO initialized - Mekanism XP integration active");
-        LOGGER.info("Energized Smelter XP: ENABLED");
+        LOGGER.info("Energized Smelter XP: " + System.getProperty("mekapmmo.enableEnergizedSmelterXP", "true").toUpperCase());
         LOGGER.info("Digital Miner XP: " + System.getProperty("mekapmmo.enableDigitalMinerXP", "true").toUpperCase());
         LOGGER.info("Mixin config should be loaded from: mixins.meka_pmmo.json");
         LOGGER.info("=".repeat(50));

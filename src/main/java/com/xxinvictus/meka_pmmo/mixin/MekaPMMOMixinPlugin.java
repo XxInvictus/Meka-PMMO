@@ -39,6 +39,23 @@ public class MekaPMMOMixinPlugin implements IMixinConfigPlugin {
             
             return shouldApply;
         }
+        
+        // Conditionally disable Energized Smelter mixins if config disabled
+        if (mixinClassName.equals("com.xxinvictus.meka_pmmo.mixin.CachedRecipeMixin") ||
+            mixinClassName.equals("com.xxinvictus.meka_pmmo.mixin.OneInputCachedRecipeMixin")) {
+            // Check system property set during early mod loading
+            String enabled = System.getProperty("mekapmmo.enableEnergizedSmelterXP", "true");
+            boolean shouldApply = Boolean.parseBoolean(enabled);
+            
+            if (!shouldApply) {
+                org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                    .info(mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1) + 
+                          " disabled via config - skipping mixin application");
+            }
+            
+            return shouldApply;
+        }
+        
         return true; // Apply all other mixins
     }
     

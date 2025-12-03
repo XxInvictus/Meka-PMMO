@@ -1,5 +1,6 @@
 package com.xxinvictus.meka_pmmo.handler;
 
+import com.xxinvictus.meka_pmmo.Config;
 import harmonised.pmmo.api.events.FurnaceBurnEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +23,11 @@ public class SmeltTranslationHandler {
      * @param pos The block position of the machine performing the operation
      */
     public static void handleSmeltOperation(ItemStack input, ItemStack output, Level level, BlockPos pos) {
+        // Check if feature is disabled via config (runtime check as fallback)
+        if (!Config.enableEnergizedSmelterXP) {
+            return;
+        }
+        
         // Validate inputs
         if (input == null || output == null || level == null || pos == null) {
             return;

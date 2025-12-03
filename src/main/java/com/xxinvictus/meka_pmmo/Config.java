@@ -21,6 +21,10 @@ public class Config
             .comment("Enable debug logging for Mekanism XP integration")
             .define("enableDebugLogging", false);
 
+    private static final ForgeConfigSpec.BooleanValue ENABLE_ENERGIZED_SMELTER_XP = BUILDER
+            .comment("Enable XP rewards from Energized Smelter smelting operations")
+            .define("enableEnergizedSmelterXP", true);
+
     private static final ForgeConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_XP = BUILDER
             .comment("Enable XP rewards from Digital Miner mining operations")
             .define("enableDigitalMinerXP", true);
@@ -28,12 +32,14 @@ public class Config
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static boolean enableDebugLogging;
+    public static boolean enableEnergizedSmelterXP;
     public static boolean enableDigitalMinerXP;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
         enableDebugLogging = ENABLE_DEBUG_LOGGING.get();
+        enableEnergizedSmelterXP = ENABLE_ENERGIZED_SMELTER_XP.get();
         enableDigitalMinerXP = ENABLE_DIGITAL_MINER_XP.get();
     }
 }
