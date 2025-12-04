@@ -4,9 +4,11 @@
   "package": "com.xxinvictus.meka_pmmo.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.meka_pmmo.refmap.json",
+  "plugin": "com.xxinvictus.meka_pmmo.mixin.MekaPMMOMixinPlugin",
   "mixins": [
     "CachedRecipeMixin",
-    "OneInputCachedRecipeMixin"
+    "OneInputCachedRecipeMixin",
+    "DigitalMinerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
