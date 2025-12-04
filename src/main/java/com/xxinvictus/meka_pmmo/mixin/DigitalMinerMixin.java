@@ -5,7 +5,6 @@ import mekanism.common.tile.machine.TileEntityDigitalMiner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.BlockEvent;
@@ -14,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Mixin to intercept Digital Miner's block breaking operations.
- * Fires BlockEvent.BreakEvent so PMMO's BreakHandler grants XP to the owner.
+ * Fires BlockEvent.BreakEvent so PMMO's BreakHandler grants XP to the owner
+ * and enforces skill requirements.
  * 
  * This mixin can be disabled via config (mekapmmo.enableDigitalMinerXP=false).
  */
@@ -27,22 +26,25 @@ import java.util.UUID;
 public abstract class DigitalMinerMixin {
     
     /**
-     * Inject at HEAD of getDrops() to fire BreakEvent before drops are calculated.
+     * Inject at HEAD of canMine() to fire our own BreakEvent before Mekanism's validation.
      * 
-     * IMPORTANT: We fire the event at the MINER's position (where machine is placed),
-     * NOT at the mined block's position. This allows PMMO's chunk tracking to find
-     * the owner and grant them XP, similar to how FurnaceHandler works.
+     * This method is called BEFORE drops are calculated, which is the correct order.
+     * We fire the event with the owner as the player for both XP and skill requirement checks.
+     * 
+     * If PMMO cancels the event (skill requirements not met), we return false immediately
+     * which causes the Digital Miner to skip this block without mining it.
      */
     @Inject(
-        method = "getDrops(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)Ljava/util/List;",
+        method = "canMine",
         at = @At("HEAD"),
+        cancellable = true,
         remap = false,
         require = 0  // Optional - won't crash if method not found
     )
-    private void onGetDrops(
+    private void onCanMineHead(
         BlockState state,
-        BlockPos minedBlockPos,  // This is the MINED block position (remote)
-        CallbackInfoReturnable<List<ItemStack>> cir
+        BlockPos pos,
+        CallbackInfoReturnable<Boolean> cir
     ) {
         try {
             // Check if feature is enabled (runtime check as fallback)
@@ -71,9 +73,6 @@ public abstract class DigitalMinerMixin {
                 return; // No owner, no XP
             }
             
-            // Get the MINER's position (NOT the mined block's position)
-            BlockPos minerPos = self.getBlockPos();
-            
             // Get or create the player
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(ownerUUID);
             if (player == null) {
@@ -87,22 +86,36 @@ public abstract class DigitalMinerMixin {
                 player = new ServerPlayer(level.getServer(), level, profile.get());
             }
             
-            // Fire BlockEvent.BreakEvent at the MINER's position with the MINED block's state
-            // Position: miner's location (for PMMO chunk tracking to find owner)
-            // State: the actual block being mined (for XP calculation)
-            BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(level, minerPos, state, player);
+            // Fire BlockEvent.BreakEvent with the mined block's position and state
+            // PMMO's BreakHandler uses:
+            // - event.getPlayer() for player (we provide the owner)
+            // - event.getPos() for skill requirement checks
+            // - event.getState() for XP calculation
+            BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(level, pos, state, player);
             
             // Post the event to Forge's event bus
-            // PMMO's BreakHandler will catch this and grant XP
+            // PMMO's BreakHandler will catch this and grant XP (and check skill requirements)
             MinecraftForge.EVENT_BUS.post(event);
             
-            // Note: We don't check if event was canceled - we're just notifying PMMO
-            // The Digital Miner already did its own permission checks
+            // Check if PMMO canceled the event due to skill requirements
+            // Only enforce if the config option is enabled
+            if (Config.enableDigitalMinerSkillRequirements && event.isCanceled()) {
+                // Player doesn't meet skill requirements - prevent mining
+                // Return false immediately to stop the entire mining operation
+                cir.setReturnValue(false);
+                
+                if (Config.enableDebugLogging) {
+                    org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                        .debug("Digital Miner: Blocked mining {} at {} - owner {} does not meet PMMO skill requirements", 
+                            state.getBlock().getName().getString(), pos, ownerUUID);
+                }
+                return;
+            }
             
             if (Config.enableDebugLogging) {
                 org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
-                    .debug("Digital Miner XP: Fired BreakEvent for {} at miner pos {} (mined block at {})", 
-                        state.getBlock().getName().getString(), minerPos, minedBlockPos);
+                    .debug("Digital Miner XP: Fired BreakEvent for {} at {} (owner: {})", 
+                        state.getBlock().getName().getString(), pos, ownerUUID);
             }
             
         } catch (Exception e) {

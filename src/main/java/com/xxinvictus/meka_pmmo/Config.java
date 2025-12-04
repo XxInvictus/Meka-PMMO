@@ -29,11 +29,16 @@ public class Config
             .comment("Enable XP rewards from Digital Miner mining operations")
             .define("enableDigitalMinerXP", true);
 
+    private static final ForgeConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_SKILL_REQUIREMENTS = BUILDER
+            .comment("Enable PMMO skill requirement checks for Digital Miner (prevents mining blocks without sufficient skill)")
+            .define("enableDigitalMinerSkillRequirements", true);
+
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static boolean enableDebugLogging;
     public static boolean enableEnergizedSmelterXP;
     public static boolean enableDigitalMinerXP;
+    public static boolean enableDigitalMinerSkillRequirements;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
@@ -41,5 +46,6 @@ public class Config
         enableDebugLogging = ENABLE_DEBUG_LOGGING.get();
         enableEnergizedSmelterXP = ENABLE_ENERGIZED_SMELTER_XP.get();
         enableDigitalMinerXP = ENABLE_DIGITAL_MINER_XP.get();
+        enableDigitalMinerSkillRequirements = ENABLE_DIGITAL_MINER_SKILL_REQUIREMENTS.get();
     }
 }
