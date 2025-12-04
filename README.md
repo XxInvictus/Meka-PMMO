@@ -1,6 +1,6 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) ![Static Badge](https://img.shields.io/badge/github-repo-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FXxInvictus%2FMeka-PMMO)  
-![Static Badge](https://img.shields.io/badge/Get%20on%20Curseforge-link-chocolate?logo=curseforge&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fmeka-pmmo)
- ![Static Badge](https://img.shields.io/badge/Get%20on%20Modrinth-link-forestgreen?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fmeka-pmmo)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Static Badge](https://img.shields.io/badge/github-repo-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FXxInvictus%2FMeka-PMMO)](https://github.com/XxInvictus/Meka-PMMO) [![Dev Build & Test](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/dev-build.yml/badge.svg?branch=1.20.1-dev)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/dev-build.yml) [![Release Build & Publish](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/release.yml/badge.svg)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/release.yml)  
+[![Static Badge](https://img.shields.io/badge/Get%20on%20Curseforge-link-chocolate?logo=curseforge&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fmeka-pmmo)](https://www.curseforge.com/minecraft/mc-mods/meka-pmmo)
+ [![Static Badge](https://img.shields.io/badge/Get%20on%20Modrinth-link-forestgreen?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fmeka-pmmo)](https://modrinth.com/mod/meka-pmmo)
  
 # Meka-PMMO
 
