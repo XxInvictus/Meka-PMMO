@@ -135,6 +135,16 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x gradlew
       
+      - name: Cache Gradle Configuration
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/configuration-cache
+          key: ${{ runner.os }}-gradle-config-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-config-
+      
       - name: Extract Properties
         id: properties
         run: |
@@ -155,8 +165,28 @@ jobs:
           # Print for debugging
           echo "Building ${mod_name} v${full_version}"
       
+      - name: Check for Version Conflicts
+        id: version_check
+        continue-on-error: true
+        run: |
+          tag="${{ steps.properties.outputs.full_version }}"
+          
+          # Check if tag exists
+          if git ls-remote --tags origin | grep -q "refs/tags/${tag}$"; then
+            echo "::warning::Tag ${tag} already exists. This is a rebuild of an existing version."
+            echo "::warning::Consider using [NO-PUBLISH] in commit message to dry-run test."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version ${tag} is new."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon --build-cache --configuration-cache --parallel
+        env:
+          GRADLE_BUILD_ACTION_CACHE_KEY_PREFIX: release
       
       - name: Set Custom Changelog
         id: custom_changelog_check
@@ -226,12 +256,28 @@ jobs:
             echo "Created and pushed tag: $tag"
           fi
       
+      - name: Generate Source Hash
+        id: source_hash
+        run: |
+          # Generate hash of source files to detect actual code changes
+          source_hash=$(find src -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)
+          echo "hash=${source_hash}" >> $GITHUB_OUTPUT
+          echo "Source hash: ${source_hash}"
+      
+      - name: Cache Build Output
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: build/libs/*.jar
+          key: release-build-${{ steps.properties.outputs.full_version }}-${{ steps.source_hash.outputs.hash }}
+      
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
           path: build/libs/*.jar
           retention-days: 30
+          compression-level: 6
 
   release:
     name: Create GitHub Release
@@ -247,7 +293,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: Download Build Artifacts
+      - name: Restore Build Cache
+        uses: actions/cache/restore@v4
+        id: cache_restore
+        with:
+          path: build/libs/*.jar
+          key: release-build-${{ needs.build.outputs.full_version }}-
+          restore-keys: |
+            release-build-${{ needs.build.outputs.full_version }}-
+          fail-on-cache-miss: false
+      
+      - name: Download Build Artifacts (Fallback)
+        if: steps.cache_restore.outputs.cache-hit != 'true'
         uses: actions/download-artifact@v4
         with:
           name: release-artifacts
@@ -295,7 +352,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: Download Build Artifacts
+      - name: Restore Build Cache
+        uses: actions/cache/restore@v4
+        id: cache_restore
+        with:
+          path: build/libs/*.jar
+          key: release-build-${{ needs.build.outputs.full_version }}-
+          restore-keys: |
+            release-build-${{ needs.build.outputs.full_version }}-
+          fail-on-cache-miss: false
+      
+      - name: Download Build Artifacts (Fallback)
+        if: steps.cache_restore.outputs.cache-hit != 'true'
         uses: actions/download-artifact@v4
         with:
           name: release-artifacts

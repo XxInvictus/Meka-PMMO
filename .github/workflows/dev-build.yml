@@ -75,6 +75,16 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x gradlew
       
+      - name: Cache Gradle Configuration
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/configuration-cache
+          key: ${{ runner.os }}-gradle-config-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-config-
+      
       - name: Extract Properties
         id: properties
         run: |
@@ -103,9 +113,21 @@ jobs:
           echo "Building ${mod_name} v${minecraft_version}-${mod_version}"
       
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon --build-cache --configuration-cache --parallel
+        env:
+          GRADLE_BUILD_ACTION_CACHE_KEY_PREFIX: dev
+      
+      - name: Download Dependencieses
+        uses: actions/cache@v4
+        id: dep_cache
+        with:
+          path: dependencies
+          key: test-deps-${{ steps.properties.outputs.minecraft_version }}-mek-${{ steps.properties.outputs.mekanism_version }}.${{ steps.properties.outputs.mekanism_subversion }}-pmmo-${{ steps.properties.outputs.pmmo_version }}
+          restore-keys: |
+            test-deps-${{ steps.properties.outputs.minecraft_version }}-
       
       - name: Download Dependencies
+        if: steps.dep_cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p dependencies
           
