@@ -19,6 +19,7 @@ on:
       - 'gradle.properties'
       - 'build.gradle'
       - 'CHANGELOG.md'
+      - 'RELEASE_CHANGELOG.md'
       - '.github/workflows/release.yml'
   workflow_dispatch:
     inputs:
@@ -48,7 +49,7 @@ on:
         default: false
         type: boolean
       custom_changelog:
-        description: 'Custom changelog (leave empty to use CHANGELOG.md)'
+        description: 'Custom changelog (leave empty to use RELEASE_CHANGELOG.md)'
         required: false
         default: ''
         type: string
@@ -123,37 +124,26 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "using_custom=false" >> $GITHUB_OUTPUT
-            echo "Will extract changelog from CHANGELOG.md"
+            echo "Will extract changelog from RELEASE_CHANGELOG.md"
           fi
       
       - name: Extract Changelog
         id: changelog
         if: steps.custom_changelog_check.outputs.using_custom != 'true'
         run: |
-          # Extract changelog for current version and any unreleased versions since last release
+          # Extract changelog for current version from RELEASE_CHANGELOG.md
           version="${{ steps.properties.outputs.mod_version }}"
           
-          # Get the last released tag (if any)
-          last_release=$(git tag --list "1.20.1-*" --sort=-version:refname | head -n1 || echo "")
+          # Extract the changelog section for the current version
+          # Format: ## Version X.Y.Z
+          changelog=$(awk "/## Version ${version}/,/^## Version |^---/" RELEASE_CHANGELOG.md | sed '1d;$d')
           
-          if [ -n "$last_release" ]; then
-            # Extract version number from tag (e.g., "1.20.1-1.1.0" -> "1.1.0")
-            last_version=$(echo "$last_release" | sed 's/^1\.20\.1-//')
-            echo "Last release found: $last_version"
-            
-            # Extract all changelog entries from current version back to (but not including) last released version
-            # This captures all unreleased versions in between
-            changelog=$(awk "/## \[${version}\]/,/## \[${last_version}\]/" CHANGELOG.md | sed '$d')
-          else
-            # No previous release, just get current version
-            echo "No previous release found, extracting current version only"
-            changelog=$(awk "/## \[${version}\]/,/## \[/" CHANGELOG.md | sed '$d')
+          # If changelog is empty, try without the space (## Version X.Y.Z vs ##Version X.Y.Z)
+          if [ -z "$changelog" ]; then
+            changelog=$(awk "/##Version ${version}/,/^## Version |^---/" RELEASE_CHANGELOG.md | sed '1d;$d')
           fi
           
-          # Remove the version header line from the start
-          changelog=$(echo "$changelog" | sed '1d')
-          
-          # If changelog is empty, use a default message
+          # If still empty, use a default message
           if [ -z "$changelog" ]; then
             changelog="Release version ${version}"
           fi
