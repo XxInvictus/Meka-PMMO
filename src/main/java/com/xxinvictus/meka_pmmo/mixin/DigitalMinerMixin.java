@@ -47,9 +47,9 @@ public abstract class DigitalMinerMixin {
         CallbackInfoReturnable<Boolean> cir
     ) {
         try {
-            // Check if feature is enabled (runtime check as fallback)
-            if (!Config.enableDigitalMinerXP) {
-                return;
+            // Check if both features are disabled (runtime check as fallback)
+            if (!Config.enableDigitalMinerXP && !Config.enableDigitalMinerSkillRequirements) {
+                return; // Both features disabled, nothing to do
             }
             
             // Get the Digital Miner tile entity

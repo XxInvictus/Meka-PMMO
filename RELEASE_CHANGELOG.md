@@ -1,5 +1,16 @@
 # Meka-PMMO Release Notes
 
+## Version 1.3.1
+
+### Bug Fixes
+
+**Digital Miner Skill Requirements** 🐛
+- Fixed issue where skill requirement enforcement would not work if Digital Miner XP was disabled
+- The Digital Miner will now correctly respect skill requirements regardless of XP setting
+- Both features can now be independently enabled/disabled as intended
+
+---
+
 ## Version 1.3.0
 
 ### What's New
