@@ -1,0 +1,76 @@
+name: Version Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - '1.20.1-release'
+    paths:
+      - 'gradle.properties'
+      - 'src/**'
+
+jobs:
+  check-version:
+    name: Check Version Updated
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get Current Version
+        id: current
+        run: |
+          version=$(grep '^mod_version=' gradle.properties | cut -d'=' -f2)
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "Current version: ${version}"
+      
+      - name: Get Base Branch Version
+        id: base
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git checkout origin/${{ github.base_ref }} -- gradle.properties
+          version=$(grep '^mod_version=' gradle.properties | cut -d'=' -f2)
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "Base version: ${version}"
+      
+      - name: Compare Versions
+        id: compare
+        run: |
+          current="${{ steps.current.outputs.version }}"
+          base="${{ steps.base.outputs.version }}"
+          
+          if [ "$current" = "$base" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "::error::Version not updated! Current: $current, Base: $base"
+            echo "::error::Please update mod_version in gradle.properties before merging to release branch"
+            echo "::error::To override this check, use force merge or update the version"
+            exit 1
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✓ Version updated: $base → $current"
+          fi
+      
+      - name: Version Update Summary
+        if: success()
+        run: |
+          echo "### ✅ Version Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version has been updated:" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: \`${{ steps.base.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Current: \`${{ steps.current.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Version Not Updated Warning
+        if: failure()
+        run: |
+          echo "### ⚠️ Version Check Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The \`mod_version\` in \`gradle.properties\` has not been updated." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Current version:** \`${{ steps.base.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Required action:** Update \`mod_version\` in \`gradle.properties\` before merging to release branch." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**To override:** Use force merge (admin privileges required)." >> $GITHUB_STEP_SUMMARY
