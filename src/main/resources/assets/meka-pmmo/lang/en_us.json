@@ -1,0 +1,7 @@
+{
+  "meka_pmmo.configuration.title": "Meka-PMMO Configs",
+  "meka_pmmo.configuration.enableDebugLogging": "Enable Debug Logging",
+  "meka_pmmo.configuration.enableEnergizedSmelterXP": "Enable Energized Smelter XP",
+  "meka_pmmo.configuration.enableDigitalMinerXP": "Enable Digital Miner XP",
+  "meka_pmmo.configuration.enableDigitalMinerSkillRequirements": "Enable Digital Miner Skill Requirements"
+}

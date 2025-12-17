@@ -1,9 +1,9 @@
 package com.xxinvictus.meka_pmmo;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * Configuration for Meka-PMMO mod.
@@ -12,28 +12,32 @@ import net.minecraftforge.fml.event.config.ModConfigEvent;
  * - XP multiplier
  * - Debug logging toggle
  */
-@Mod.EventBusSubscriber(modid = MekaPMMO.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = MekaPMMO.MODID)
 public class Config
 {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_DEBUG_LOGGING = BUILDER
+    private static final ModConfigSpec.BooleanValue ENABLE_DEBUG_LOGGING = BUILDER
             .comment("Enable debug logging for Mekanism XP integration")
+            .translation("meka_pmmo.configuration.enableDebugLogging")
             .define("enableDebugLogging", false);
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_ENERGIZED_SMELTER_XP = BUILDER
+    private static final ModConfigSpec.BooleanValue ENABLE_ENERGIZED_SMELTER_XP = BUILDER
             .comment("Enable XP rewards from Energized Smelter smelting operations")
+            .translation("meka_pmmo.configuration.enableEnergizedSmelterXP")
             .define("enableEnergizedSmelterXP", true);
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_XP = BUILDER
+    private static final ModConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_XP = BUILDER
             .comment("Enable XP rewards from Digital Miner mining operations")
+            .translation("meka_pmmo.configuration.enableDigitalMinerXP")
             .define("enableDigitalMinerXP", true);
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_SKILL_REQUIREMENTS = BUILDER
+    private static final ModConfigSpec.BooleanValue ENABLE_DIGITAL_MINER_SKILL_REQUIREMENTS = BUILDER
             .comment("Enable PMMO skill requirement checks for Digital Miner (prevents mining blocks without sufficient skill)")
+            .translation("meka_pmmo.configuration.enableDigitalMinerSkillRequirements")
             .define("enableDigitalMinerSkillRequirements", true);
 
-    static final ForgeConfigSpec SPEC = BUILDER.build();
+    static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean enableDebugLogging;
     public static boolean enableEnergizedSmelterXP;
@@ -47,5 +51,11 @@ public class Config
         enableEnergizedSmelterXP = ENABLE_ENERGIZED_SMELTER_XP.get();
         enableDigitalMinerXP = ENABLE_DIGITAL_MINER_XP.get();
         enableDigitalMinerSkillRequirements = ENABLE_DIGITAL_MINER_SKILL_REQUIREMENTS.get();
+        
+        if (enableDebugLogging) {
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                .debug("Config loaded - Energized Smelter XP: {}, Digital Miner XP: {}, Digital Miner Skill Checks: {}", 
+                      enableEnergizedSmelterXP, enableDigitalMinerXP, enableDigitalMinerSkillRequirements);
+        }
     }
 }

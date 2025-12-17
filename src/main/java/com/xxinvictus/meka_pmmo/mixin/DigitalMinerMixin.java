@@ -3,11 +3,12 @@ package com.xxinvictus.meka_pmmo.mixin;
 import com.xxinvictus.meka_pmmo.Config;
 import mekanism.common.tile.machine.TileEntityDigitalMiner;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.BlockEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -83,7 +84,9 @@ public abstract class DigitalMinerMixin {
                 if (profile.isEmpty()) {
                     return; // Can't find player profile
                 }
-                player = new ServerPlayer(level.getServer(), level, profile.get());
+                // Create default ClientInformation for offline player (MC 1.21.1 requirement)
+                ClientInformation clientInfo = ClientInformation.createDefault();
+                player = new ServerPlayer(level.getServer(), level, profile.get(), clientInfo);
             }
             
             // Fire BlockEvent.BreakEvent with the mined block's position and state
@@ -95,7 +98,7 @@ public abstract class DigitalMinerMixin {
             
             // Post the event to Forge's event bus
             // PMMO's BreakHandler will catch this and grant XP (and check skill requirements)
-            MinecraftForge.EVENT_BUS.post(event);
+            NeoForge.EVENT_BUS.post(event);
             
             // Check if PMMO canceled the event due to skill requirements
             // Only enforce if the config option is enabled
