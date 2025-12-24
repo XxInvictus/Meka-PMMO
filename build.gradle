@@ -32,7 +32,7 @@ repositories {
 }
 
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-${loader_type}"
 }
 
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
@@ -155,7 +155,8 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             issue_tracker_url      : issue_tracker_url,
             pmmo_version           : pmmo_version,
             mekanism_version       : mekanism_version,
-            mekanism_subversion    : mekanism_subversion
+            mekanism_subversion    : mekanism_subversion,
+            loader_type            : loader_type,
     ]
     inputs.properties replaceProperties
     expand replaceProperties
