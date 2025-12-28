@@ -2,8 +2,7 @@
   "required": true,
   "minVersion": "0.8.5",
   "package": "com.xxinvictus.meka_pmmo.mixin",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "mixins.meka_pmmo.refmap.json",
+  "compatibilityLevel": "JAVA_21",
   "plugin": "com.xxinvictus.meka_pmmo.mixin.MekaPMMOMixinPlugin",
   "mixins": [
     "CachedRecipeMixin",

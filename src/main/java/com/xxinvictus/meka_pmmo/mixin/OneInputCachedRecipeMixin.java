@@ -4,7 +4,7 @@ import com.xxinvictus.meka_pmmo.handler.SmeltTranslationHandler;
 import mekanism.api.recipes.cache.OneInputCachedRecipe;
 import mekanism.api.recipes.cache.CachedRecipe;
 import mekanism.api.recipes.ItemStackToItemStackRecipe;
-import mekanism.common.recipe.impl.SmeltingIRecipe;
+import mekanism.common.recipe.MekanismRecipeType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -132,18 +132,22 @@ public abstract class OneInputCachedRecipeMixin<RECIPE extends ItemStackToItemSt
      * @return true if the recipe type is supported
      */
     private boolean isSupportedRecipe(Object recipeObj) {
-        // Currently only supporting smelting recipes (Energized Smelter)
-        if (recipeObj instanceof SmeltingIRecipe) {
+        // Check if this is an ItemStackToItemStackRecipe (the base for smelting, enriching, crushing)
+        if (!(recipeObj instanceof ItemStackToItemStackRecipe recipe)) {
+            return false;
+        }
+        
+        // Check if the recipe type is smelting (Energized Smelter)
+        // In Mekanism 1.21.x, we need to check the recipe type, not the class type
+        if (recipe.getType() == MekanismRecipeType.SMELTING.get()) {
             return true;
         }
         
-        // TODO: Add support for other machine types
+        // TODO: Add support for other machine types by checking their recipe types
         // Examples:
-        // - CrushingIRecipe (Crusher)
-        // - EnrichingIRecipe (Enrichment Chamber)
-        // - CompressingIRecipe (Osmium Compressor)
-        // - PurifyingIRecipe (Purification Chamber)
-        // - InjectingIRecipe (Chemical Injection Chamber)
+        // - MekanismRecipeType.CRUSHING (Crusher)
+        // - MekanismRecipeType.ENRICHING (Enrichment Chamber)
+        // Note: Machines that use chemicals (Compressing, Purifying, Injecting) use different recipe types
         
         return false;
     }

@@ -5,7 +5,7 @@ import harmonised.pmmo.api.events.FurnaceBurnEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 /**
  * Main handler for processing intercepted Mekanism smelting operations.
@@ -42,11 +42,17 @@ public class SmeltTranslationHandler {
             return;
         }
 
+        if (Config.enableDebugLogging) {
+            org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
+                .debug("Processing Energized Smelter operation: {} -> {} at {}", 
+                      input.getDescriptionId(), output.getDescriptionId(), pos);
+        }
+
         // Fire PMMO's FurnaceBurnEvent to grant experience
         // Wrapped in try-catch to handle potential PMMO API changes gracefully
         try {
-            FurnaceBurnEvent event = new FurnaceBurnEvent(input, level, pos);
-            MinecraftForge.EVENT_BUS.post(event);
+            FurnaceBurnEvent event = new FurnaceBurnEvent(input, output, level, pos);
+            NeoForge.EVENT_BUS.post(event);
         } catch (NoSuchMethodError e) {
             // PMMO's FurnaceBurnEvent constructor signature changed
             org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")

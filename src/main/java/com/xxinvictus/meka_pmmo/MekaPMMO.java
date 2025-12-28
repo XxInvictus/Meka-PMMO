@@ -1,14 +1,16 @@
 package com.xxinvictus.meka_pmmo;
 
 import com.mojang.logging.LogUtils;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import org.slf4j.Logger;
 
 /**
@@ -22,18 +24,17 @@ public class MekaPMMO
     public static final String MODID = "meka_pmmo";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public MekaPMMO(FMLJavaModLoadingContext context)
+    public MekaPMMO(IEventBus modEventBus, ModContainer modContainer)
     {
-        IEventBus modEventBus = context.getModEventBus();
-
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
 
         // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this);
 
-        // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
-        context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        // Register our mod's ForgeConfigSpec so that NeoForge can create and load the config file for us
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         
         // Set system properties for mixin plugin based on config
         // This allows early disabling of mixins before mixin application

@@ -207,23 +207,47 @@ jobs:
         id: changelog
         if: steps.custom_changelog_check.outputs.using_custom != 'true'
         run: |
-          # Extract changelog for current version from RELEASE_CHANGELOG.md
+          # Extract changelog for current version and all unreleased intermediate versions
           version="${{ steps.properties.outputs.mod_version }}"
+          full_version="${{ steps.properties.outputs.full_version }}"
           
-          # Extract the changelog section for the current version
-          # Format: ## Version X.Y.Z
-          # Read from the version header until the next version header or separator line
-          changelog=$(awk "/## Version ${version}/,/^## Version [0-9]|^---$/" RELEASE_CHANGELOG.md | sed '1d;$d')
+          # Get the last released tag (if any)
+          last_release=$(git tag --list "1.20.1-*" --sort=-version:refname | head -n1 || echo "")
           
-          # Trim any trailing whitespace and empty lines
-          changelog=$(echo "$changelog" | sed -e :a -e '/^\s*$/d;/^\s*$/{$d;N;ba' -e '}')
+          if [ -n "$last_release" ]; then
+            # Extract version number from tag (e.g., "1.20.1-1.1.0" -> "1.1.0")
+            last_version=$(echo "$last_release" | sed 's/^1\.20\.1-//')
+            echo "Last release found: $last_version"
+            
+            # Extract all changelog entries from current version back to (not including) last released version
+            # This captures all unreleased versions in between, including their version headers
+            changelog=$(awk -v current="$version" -v last="$last_version" '
+              $0 ~ "^## Version " current {collecting=1; next}
+              collecting && $0 ~ "^## Version " last {exit}
+              collecting && /^---/ {print ""; next}
+              collecting {print}
+            ' RELEASE_CHANGELOG.md | sed 's/[[:space:]]*$//')
+          else
+            # No previous release, just get current version
+            echo "No previous release found, extracting current version only"
+            changelog=$(awk -v ver="$version" '
+              $0 ~ "^## Version " ver {found=1; next}
+              found && /^---/ {exit}
+              found {print}
+            ' RELEASE_CHANGELOG.md | sed 's/[[:space:]]*$//')
+          fi
+          
+          # Remove leading empty lines
+          changelog=$(echo "$changelog" | sed '/./,$!d')
           
           # If changelog is empty, use a default message
           if [ -z "$changelog" ] || [ "$changelog" = " " ]; then
             changelog="Release version ${version}"
             echo "Warning: Could not extract changelog for version ${version}"
           else
-            echo "Successfully extracted changelog for version ${version}"
+            echo "Successfully extracted changelog"
+            echo "Changelog preview (first 300 chars):"
+            echo "$changelog" | head -c 300
           fi
           
           # Write to file to preserve newlines
