@@ -16,7 +16,6 @@ jobs:
       project-root: .
       gradle-args: build
       upload-artifacts: true
-      artifact-name: build-artifacts
       runs-on: HomeServ
 
   gradle-test:
@@ -35,7 +34,6 @@ jobs:
       project-root: .
       gradle-args: build
       use-build-artifacts: true
-      artifact-name: build-artifacts
       cache-mc: github
       runs-on: HomeServ
     needs: [build, gradle-test]

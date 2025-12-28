@@ -35,6 +35,10 @@ config="mixins.${mod_id}.json"
     versionRange="[${mekanism_version},)"
     ordering="AFTER"
     side="BOTH"
+    [dependencies.${mod_id}.mc-publish]
+        ignore=false
+        modrinth="Ce6I4WUE"
+        curseforge="268560"
 
 [[dependencies.${mod_id}]]
     modId="pmmo"
@@ -42,3 +46,7 @@ config="mixins.${mod_id}.json"
     versionRange="[${pmmo_version},)"
     ordering="AFTER"
     side="BOTH"
+    [dependencies.${mod_id}.mc-publish]
+        ignore=false
+        modrinth="KFQYC1Uy"
+        curseforge="353935"
