@@ -36,7 +36,7 @@ but it is still a complete changelog containing the full release history.
 
 - TBD
 
-## Version 1.3.1
+## [1.3.1] - 2025-12-04
 
 ### Bug Fixes
 
@@ -47,7 +47,7 @@ but it is still a complete changelog containing the full release history.
 
 ---
 
-## Version 1.3.0
+## [1.3.0] - 2025-12-04
 
 ### What's New
 
@@ -68,7 +68,7 @@ You can customize the mod's behavior in the config file:
 
 ---
 
-## Version 1.2.0
+## [1.2.0] - 2025-12-04
 
 ### What's New
 
@@ -78,7 +78,7 @@ You can customize the mod's behavior in the config file:
 
 ---
 
-## Version 1.1.0
+## [1.1.0] - 2025-12-04
 
 ### What's New
 
@@ -89,7 +89,7 @@ You can customize the mod's behavior in the config file:
 
 ---
 
-## Version 1.0.1
+## [1.0.1] - 2025-11-25
 
 ### Bug Fixes
 - Fixed crash when using non-smelting Mekanism machines like the Electrolytic Separator
@@ -97,7 +97,7 @@ You can customize the mod's behavior in the config file:
 
 ---
 
-## Version 1.0.0
+## [1.0.0] - 2025-11-22
 
 ### Initial Release
 
