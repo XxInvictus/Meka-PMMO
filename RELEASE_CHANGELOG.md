@@ -1,5 +1,41 @@
 # Meka-PMMO Release Notes
 
+<!-- markdownlint-disable MD024 -->
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+This file is intended to be user-facing and concise (compared to CHANGELOG.md),
+but it is still a complete changelog containing the full release history.
+
+## [Unreleased]
+
+### Added
+
+- TBD
+
+### Changed
+
+- TBD
+
+### Deprecated
+
+- TBD
+
+### Removed
+
+- TBD
+
+### Fixed
+
+- TBD
+
+### Security
+
+- TBD
+
 ## Version 1.3.1
 
 ### Bug Fixes
