@@ -15,7 +15,7 @@ jobs:
 
       # Optional publishing (requires secrets/vars in the consumer repo)
       publish-github: true
-      publish-modrinth: false
+      publish-modrinth: true
       modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
-      publish-curseforge: false
+      publish-curseforge: true
       curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
