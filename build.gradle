@@ -9,7 +9,7 @@ version = "${minecraft_version}-${mod_version}"
 group = "${mod_group_id}"
 
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-${loader_type}"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -90,7 +90,8 @@ tasks.named('processResources', ProcessResources).configure {
             loader_version_range: loader_version_range,
             mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors: mod_authors, mod_description: mod_description, issue_tracker_url: issue_tracker_url,
-            pmmo_version: pmmo_version, mekanism_version: mekanism_version, mekanism_subversion: mekanism_subversion
+            pmmo_version: pmmo_version, mekanism_version: mekanism_version, mekanism_subversion: mekanism_subversion,
+            loader_type: loader_type,
     ]
     inputs.properties replaceProperties
 

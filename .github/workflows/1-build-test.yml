@@ -1,0 +1,54 @@
+name: 1. Build & Test
+run-name: "1. [${{ github.ref_name }}] - ${{ github.event.head_commit.message }}"
+on:
+  push:
+    branches:
+      - '*-dev'
+    paths:
+      - 'src/**'
+      - 'gradle.properties'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - '.github/workflows/1-build-test.yml'
+      - '*CHANGELOG.md'
+  pull_request:
+    branches:
+      - '*-dev'
+    paths:
+      - 'src/**'
+      - 'gradle.properties'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - '.github/workflows/1-build-test.yml'
+      - '*CHANGELOG.md'
+
+jobs:
+  build:
+    name: Build Project
+    uses: XxInvictus/mc_universal_workflow/.github/workflows/reusable-build.yml@main
+    with:
+      project-root: .
+      gradle-args: build
+      upload-artifacts: true
+      runs-on: HomeServ
+
+  gradle-test:
+    name: Test Project
+    needs: build
+    uses: XxInvictus/mc_universal_workflow/.github/workflows/reusable-test.yml@main
+    with:
+      project-root: .
+      gradle-args: test
+      runs-on: HomeServ
+
+  runtime-test:
+    name: Runtime Test
+    uses: XxInvictus/mc_universal_workflow/.github/workflows/reusable-runtime-test.yml@main
+    with:
+      project-root: .
+      gradle-args: build
+      use-build-artifacts: true
+      cache-mc: github
+      runs-on: HomeServ
+    needs: [build, gradle-test]
+    
