@@ -1,10 +1,16 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Static Badge](https://img.shields.io/badge/github-repo-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FXxInvictus%2FMeka-PMMO)](https://github.com/XxInvictus/Meka-PMMO) [![Dev Build & Test](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/dev-build.yml/badge.svg?branch=1.20.1-dev)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/dev-build.yml) [![Release Build & Publish](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/release.yml/badge.svg)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/release.yml)  
-[![Static Badge](https://img.shields.io/badge/Get%20on%20Curseforge-link-chocolate?logo=curseforge&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fmeka-pmmo)](https://www.curseforge.com/minecraft/mc-mods/meka-pmmo)
- [![Static Badge](https://img.shields.io/badge/Get%20on%20Modrinth-link-forestgreen?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fmeka-pmmo)](https://modrinth.com/mod/meka-pmmo)
- 
 # Meka-PMMO
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub Repo](https://img.shields.io/badge/github-repo-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FXxInvictus%2FMeka-PMMO)](https://github.com/XxInvictus/Meka-PMMO)
+[![Get on CurseForge](https://img.shields.io/badge/Get%20on%20Curseforge-link-chocolate?logo=curseforge&link=https%3A%2F%2Fwww.curseforge.com%2Fminecraft%2Fmc-mods%2Fmeka-pmmo)](https://www.curseforge.com/minecraft/mc-mods/meka-pmmo)
+[![Get on Modrinth](https://img.shields.io/badge/Get%20on%20Modrinth-link-forestgreen?logo=modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Fmeka-pmmo)](https://modrinth.com/mod/meka-pmmo)
+
 A compatibility bridge between Mekanism and Project MMO (PMMO) that enables XP rewards from Mekanism machines.
+
+| 1.20.1 Forge | 1.21.1 Neoforge |
+| :---: | :---: |
+| [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/XxInvictus/Meka-PMMO/1-build-test.yml?branch=1.20.1-dev&logo=github&label=%5B1.20.1%5D%20Build%20%26%20Test)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/1-build-test.yml) | [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/XxInvictus/Meka-PMMO/1-build-test.yml?branch=1.21.1-dev&logo=github&label=%5B1.21.1%5D%20Build%20%26%20Test)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/1-build-test.yml) |
+| [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/XxInvictus/Meka-PMMO/2-build-release.yml?branch=1.20.1-release&logo=github&label=%5B1.20.1%5D%20Build%20%26%20Release)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/2-build-release.yml) | [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/XxInvictus/Meka-PMMO/2-build-release.yml?branch=1.21.1-release&logo=github&label=%5B1.21.1%5D%20Build%20%26%20Release)](https://github.com/XxInvictus/Meka-PMMO/actions/workflows/2-build-release.yml) |
 
 ## Overview
 
@@ -42,12 +48,12 @@ Meka-PMMO uses advanced mixin-based interception to:
 
 ## Dependencies
 
-| Mod | Version | Required |
-|-----|---------|----------|
-| Minecraft | 1.20.1 | ✅ |
-| Forge | 47.4.0+ | ✅ |
-| Mekanism | 10.4.16.80+ | ✅ |
-| PMMO | 1.20.1-1.7.39+ | ✅ |
+| Mod | 1.20.1 | 1.21.1 |
+| :--- | :---: | :---: |
+| Forge | 47.4.0+ | - |
+| NeoForge | - | 21.1.216+ |
+| Mekanism | 10.4.16.80+ | 10.7.17.83+ |
+| PMMO | 1.7.39+ | 2.7.35+ |
 
 ## How It Works
 
@@ -81,6 +87,9 @@ enableEnergizedSmelterXP = true
 # Enable XP rewards from Digital Miner mining operations
 # Requires restart to fully disable (prevents mixin loading)
 enableDigitalMinerXP = true
+
+# Enable PMMO skill requirement checks for Digital Miner
+enableDigitalMinerSkillRequirements = true
 ```
 
 **Note:** Disabling features requires a full game restart to prevent the mixins from loading.
@@ -107,13 +116,25 @@ To customize XP rewards:
 
 ## CI/CD & Releases
 
-This project uses GitHub Actions for automated building, testing, and publishing. See [CI-CD-SETUP.md](CI-CD-SETUP.md) for detailed CI/CD documentation.
+This project uses GitHub Actions for automated building, testing, and publishing.
 
-**Automated Workflows:**
-- ✅ Automated testing on development branch
-- ✅ Automated releases when merging to release branch
-- ✅ Multi-platform publishing (GitHub, Modrinth, CurseForge)
-- ✅ Version validation to prevent release errors
+These workflows delegate most CI/CD logic to reusable workflows in `XxInvictus/mc_universal_workflow`:
+
+- Build & Test: `.github/workflows/1-build-test.yml` (runs on `*-dev`)
+- Build & Release: `.github/workflows/2-build-release.yml` (runs on `*-release`)
+
+Publishing configuration (used by the release workflow):
+
+- Repository variables: `MODRINTH_PROJECT_ID`, `CURSEFORGE_PROJECT_ID`
+- Repository secrets: `MODRINTH_TOKEN`, `CURSEFORGE_TOKEN`
+
+**Important:** The reusable workflows enforce a strict contract (required `gradle.properties` keys + enforced artifact naming/path). See:
+
+- <https://github.com/XxInvictus/mc_universal_workflow#contract-non-negotiable>
+- <https://github.com/XxInvictus/mc_universal_workflow/blob/main/docs/INTEGRATION.md>
+- <https://github.com/XxInvictus/mc_universal_workflow/blob/main/build_docs/ARTIFACT_NAMING_CONTRACT.md>
+
+See [CI-CD-SETUP.md](CI-CD-SETUP.md) for the current CI/CD notes.
 
 ## Development
 
@@ -156,7 +177,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Credits
 
@@ -174,7 +195,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - 🐛 **Bug Reports:** [Issue Tracker](https://github.com/XxInvictus/Meka-PMMO/issues)
 - 💬 **Questions:** Open a discussion on GitHub
-- 📖 **Documentation:** See [IMPLEMENTATION_README.md](IMPLEMENTATION_README.md) for technical details
+- 📖 **Documentation:** See [CI-CD-SETUP.md](CI-CD-SETUP.md) and [.github/workflows/README.md](.github/workflows/README.md)
 
 ## Changelog
 

@@ -1,0 +1,24 @@
+version: "1.0"
+settings:
+  auto_resolve_latest: false
+
+dependencies:
+  runtime:
+    - name: mekanism
+      loaders: [forge]
+      minecraft: ["1.20.1"]
+      identifiers:
+        modrinth_id: Ce6I4WUE
+      version:
+        default: "10.4.16.80"
+      source:
+        type: modrinth
+    - name: pmmo
+      loaders: [forge]
+      minecraft: ["1.20.1"]
+      identifiers:
+        modrinth_id: KFQYC1Uy
+      version:
+        default: "1.20.1-1.7.39"
+      source:
+        type: modrinth

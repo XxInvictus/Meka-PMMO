@@ -2,72 +2,102 @@
 
 This project uses GitHub Actions for automated building, testing, and publishing.
 
-## Quick Setup
+## Current Direction
 
-### 1. Configure Repository Secrets
+This repository uses “new-*” workflows which delegate most CI/CD logic to
+reusable workflows in the `XxInvictus/mc_universal_workflow` repository.
 
-Go to `Settings > Secrets and variables > Actions > New repository secret` and add:
+These workflows live in `.github/workflows/`:
+
+- `1-build-test.yml` (Build & Test)
+- `2-build-release.yml` (Build & Release)
+
+## Upstream workflow contract (strict)
+
+The reusable workflows enforce a strict, fail-fast contract. Before changing
+build logic, read the upstream docs:
+
+- [Contract overview (required keys, repo layout rules)](https://github.com/XxInvictus/mc_universal_workflow#contract-non-negotiable)
+- [Required gradle.properties (canonical keys)](https://github.com/XxInvictus/mc_universal_workflow#required-gradleproperties)
+- [Artifact naming contract (enforced paths)](https://github.com/XxInvictus/mc_universal_workflow/blob/main/build_docs/ARTIFACT_NAMING_CONTRACT.md)
+- [Consumer integration guide (includes artifact handoff)](https://github.com/XxInvictus/mc_universal_workflow/blob/main/docs/INTEGRATION.md)
+
+### Required `gradle.properties` keys (minimum)
+
+At minimum, the upstream workflows validate that these canonical keys exist and are sane:
+
+```properties
+minecraft_version=...
+mod_id=...
+mod_version=...
+java_version=...
+loader_multi=false
+loader_type=neoforge
+```
+
+If you migrate to multi-loader, the contract changes to `loader_multi=true` and requires `active_loaders=...`.
+
+### Enforced artifact path (minimum)
+
+For single-loader repos, artifact naming is derived from `gradle.properties` and must match exactly:
+
+```text
+build/libs/${mod_id}-${loader_type}-${minecraft_version}-${mod_version}.jar
+```
+
+If you change jar naming (archivesBaseName, classifier, shadow, etc.), update it so the produced jar still matches the contract.
+
+## Quick Setup (for releases)
+
+### 1) Configure repository variables (project IDs)
+
+Go to `Settings > Secrets and variables > Actions > Variables` and add:
+
+| Variable Name | Description | Required For |
+| :--- | :--- | :--- |
+| `MODRINTH_PROJECT_ID` | Your Modrinth project ID | Publishing to Modrinth |
+| `CURSEFORGE_PROJECT_ID` | Your CurseForge project ID (numeric) | Publishing to CurseForge |
+
+### 2) Configure repository secrets (API tokens)
+
+Go to `Settings > Secrets and variables > Actions > Secrets` and add:
 
 | Secret Name | Description | Required For |
-|-------------|-------------|--------------|
-| `MODRINTH_PROJECT_ID` | Your Modrinth project ID | Publishing to Modrinth |
+| :--- | :--- | :--- |
 | `MODRINTH_TOKEN` | Modrinth API token | Publishing to Modrinth |
-| `CURSEFORGE_PROJECT_ID` | Your CurseForge project ID | Publishing to CurseForge |
 | `CURSEFORGE_TOKEN` | CurseForge API token | Publishing to CurseForge |
 
-### 2. Get Your Tokens
+### 3) Get your tokens
 
-**Modrinth:**
+#### Modrinth
+
 - Token: <https://modrinth.com/settings/pats>
-- Project ID: From your project URL `https://modrinth.com/mod/{PROJECT_ID}`
+- Project ID: from your project URL: `https://modrinth.com/mod/{PROJECT_ID}`
 
-**CurseForge:**
+#### CurseForge
+
 - Token: <https://console.curseforge.com/#/api-keys>
-- Project ID: From your project page URL (numeric ID)
+- Project ID: numeric ID from your project page URL
 
-### 3. Branch Workflow
+## Branch workflow
 
-```
+```txt
 main
- └─> 1.20.1-dev (development & testing)
-      └─> 1.20.1-release (releases & publishing)
+ └─> <mc-version>-dev (development & testing)
+      └─> <mc-version>-release (releases & publishing)
 ```
 
-**Development Flow:**
-1. Make changes in feature branches
-2. Merge to `1.20.1-dev` for automated testing
-3. When ready to release, merge to `1.20.1-release`
+Examples:
 
-**Version Updates:**
-1. Update `mod_version` in `gradle.properties`
-2. Add changelog entry in `CHANGELOG.md`
-3. Merge to `1.20.1-release`
-4. Workflow automatically tags, releases, and publishes
+- `1.20.1-dev` → `1.20.1-release`
+- `1.21.1-dev` → `1.21.1-release`
 
-## Workflows
+### Development flow
 
-### Version Check (PRs to `1.20.1-release`)
-- ✅ Verify `mod_version` has been updated
-- ✅ Block merge if version unchanged
-- ℹ️ Can be overridden with force merge (admin only)
+1. Merge changes into `*-dev` to run build/test.
+2. When ready to publish, merge into `*-release`.
 
-### Dev Build (`1.20.1-dev` branch)
-- ✅ Build mod
-- ✅ Test client startup
-- ✅ Test server startup
-- ✅ Manual run with flexible test options
-- ❌ No releases or publishing
+### Release notes
 
-### Release (`1.20.1-release` branch)
-- ✅ Build mod
-- ✅ Create git tag (idempotent)
-- ✅ Create GitHub release (idempotent)
-- ✅ Publish to Modrinth
-- ✅ Publish to CurseForge
-- ✅ Manual run with dry-run and selective publishing
-- ✅ Custom changelog override option
-- ✅ Includes skipped version changelogs
-
-## More Information
-
-See [.github/workflows/README.md](.github/workflows/README.md) for detailed documentation.
+- `2-build-release.yml` uses a reusable release workflow and inherits secrets from this repo.
+- To skip publishing for a particular release-branch push, include `[SKIP-RELEASE]` in the commit message.
