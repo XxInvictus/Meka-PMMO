@@ -76,11 +76,18 @@ dependencies {
 
     implementation 'org.spongepowered:mixin:0.8.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly "io.github.llamalad7:mixinextras-common:0.5.2"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:0.5.2"
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.2")) {
+        jarJar.ranged(it, "[0.5.2,)")
+    }
     // PMMO from Modrinth
     implementation fg.deobf("maven.modrinth:project-mmo:${minecraft_version}-${pmmo_version}")
 
     // Mekanism from ModMaven
     implementation fg.deobf("mekanism:Mekanism:${minecraft_version}-${mekanism_version}.${mekanism_subversion}")
+
+    
 }
 
 tasks.named('processResources', ProcessResources).configure {

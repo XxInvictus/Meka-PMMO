@@ -36,6 +36,22 @@ but it is still a complete changelog containing the full release history.
 
 - TBD
 
+## [1.3.2] - 2026-01-02
+
+### Improvements
+
+**Mixin Stability & Compatibility**
+
+- Updated internal mixin implementation to use MixinExtras wrappers where appropriate
+- Improved compatibility with other mods that mix in to the same Mekanism methods
+
+### Bug Fixes
+
+- Energized Smelter input capture no longer relies on reflection into Mekanism handler internals
+- Processing context capture no longer depends on Mekanism field names
+
+---
+
 ## [1.3.1] - 2025-12-04
 
 ### Bug Fixes

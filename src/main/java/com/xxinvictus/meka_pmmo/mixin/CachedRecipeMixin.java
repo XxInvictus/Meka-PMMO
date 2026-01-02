@@ -1,12 +1,17 @@
 package com.xxinvictus.meka_pmmo.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.xxinvictus.meka_pmmo.util.ProcessingContext;
 import mekanism.api.recipes.cache.CachedRecipe;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 
 /**
  * Mixin to capture the processing context (which machine is processing a recipe).
@@ -14,55 +19,76 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(value = CachedRecipe.class, remap = false)
 public abstract class CachedRecipeMixin {
+    private static final ConcurrentHashMap<Class<?>, Field[]> CAPTURE_FIELDS_CACHE = new ConcurrentHashMap<>();
 
     /**
-     * Inject at the HEAD of process() to capture the tile entity context.
+     * Wrap process() so we can set/clear context regardless of early returns.
+     *
+     * Context is set by wrapping the canHolderFunction.getAsBoolean() call.
      */
-    @Inject(
-        method = "process",
-        at = @At("HEAD"),
-        remap = false,
-        require = 0
-    )
-    private void captureProcessingContext(CallbackInfo ci) {
-        // Access canHolderFunction to get the tile entity
+    @WrapMethod(method = "process", remap = false, require = 0)
+    private void wrapProcess(Operation<Void> original) {
         try {
-            CachedRecipe<?> self = (CachedRecipe<?>) (Object) this;
-            
-            java.lang.reflect.Field holderField = CachedRecipe.class.getDeclaredField("canHolderFunction");
-            holderField.setAccessible(true);
-            Object holderFunction = holderField.get(self);
-            
-            if (holderFunction != null) {
-                // The canHolderFunction is a lambda that captures the tile entity
-                // Find the BlockEntity in its fields
-                java.lang.reflect.Field[] funcFields = holderFunction.getClass().getDeclaredFields();
-                
-                for (java.lang.reflect.Field field : funcFields) {
-                    field.setAccessible(true);
-                    Object fieldValue = field.get(holderFunction);
-                    if (fieldValue instanceof BlockEntity blockEntity) {
-                        ProcessingContext.setCurrentMachine(blockEntity);
-                        return;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Silently fail - context won't be available but won't crash
+            original.call();
+        } finally {
+            ProcessingContext.clear();
         }
     }
 
     /**
-     * Inject at RETURN to clear the context after processing.
-     * This prevents memory leaks.
+     * Wrap the holder check so we can recover the captured BlockEntity from the supplier instance.
+     * This avoids depending on CachedRecipe's field names.
      */
-    @Inject(
+    @WrapOperation(
         method = "process",
-        at = @At("RETURN"),
+        at = @At(
+            value = "INVOKE",
+            target = "Ljava/util/function/BooleanSupplier;getAsBoolean()Z"
+        ),
         remap = false,
         require = 0
     )
-    private void clearProcessingContext(CallbackInfo ci) {
-        ProcessingContext.clear();
+    private boolean captureProcessingContext(
+        BooleanSupplier supplier,
+        Operation<Boolean> original
+    ) {
+        try {
+            BlockEntity machine = extractBlockEntity(supplier);
+            if (machine != null) {
+                ProcessingContext.setCurrentMachine(machine);
+            }
+        } catch (Exception ignored) {
+            // Best-effort only
+        }
+        return original.call(supplier);
+    }
+
+    private static BlockEntity extractBlockEntity(BooleanSupplier holderFunction) {
+        if (holderFunction == null) {
+            return null;
+        }
+        try {
+            Field[] fields = CAPTURE_FIELDS_CACHE.computeIfAbsent(holderFunction.getClass(), supplierClass -> {
+                Field[] declared = supplierClass.getDeclaredFields();
+                for (Field field : declared) {
+                    try {
+                        field.setAccessible(true);
+                    } catch (Exception ignored) {
+                        // Best-effort only
+                    }
+                }
+                return declared;
+            });
+
+            for (Field field : fields) {
+                Object fieldValue = field.get(holderFunction);
+                if (fieldValue instanceof BlockEntity blockEntity) {
+                    return blockEntity;
+                }
+            }
+        } catch (Exception ignored) {
+            // Best-effort only
+        }
+        return null;
     }
 }
