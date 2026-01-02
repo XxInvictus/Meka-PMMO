@@ -1,9 +1,14 @@
 package com.xxinvictus.meka_pmmo.mixin;
 
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.xxinvictus.meka_pmmo.handler.SmeltTranslationHandler;
 import mekanism.api.recipes.cache.OneInputCachedRecipe;
 import mekanism.api.recipes.cache.CachedRecipe;
 import mekanism.api.recipes.ItemStackToItemStackRecipe;
+import mekanism.api.recipes.inputs.IInputHandler;
 import mekanism.common.recipe.MekanismRecipeType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
@@ -21,41 +26,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(value = OneInputCachedRecipe.class, remap = false)
 public abstract class OneInputCachedRecipeMixin<RECIPE extends ItemStackToItemStackRecipe> {
-    
-    // Store the input before it's consumed
-    private ItemStack capturedInput = ItemStack.EMPTY;
 
     /**
-     * Inject at HEAD to capture the input ItemStack BEFORE it's consumed
+     * Wrap the input consumption so we can capture the input ItemStack BEFORE it's used.
+     *
+     * This is substantially more stable than reflecting into Mekanism's handler lambdas.
      */
-    @Inject(
+    @WrapOperation(
         method = "finishProcessing(I)V",
-        at = @At("HEAD"),
+        at = @At(
+            value = "INVOKE",
+            target = "Lmekanism/api/recipes/inputs/IInputHandler;use(Ljava/lang/Object;I)V"
+        ),
         remap = false,
         require = 0
     )
-    private void captureInput(int operations, CallbackInfo ci) {
-        try {
-            java.lang.reflect.Field inputHandlerField = this.getClass().getDeclaredField("inputHandler");
-            inputHandlerField.setAccessible(true);
-            Object inputHandler = inputHandlerField.get(this);
-            
-            if (inputHandler != null) {
-                java.lang.reflect.Field slotField = inputHandler.getClass().getDeclaredField("val$slot");
-                slotField.setAccessible(true);
-                Object slot = slotField.get(inputHandler);
-                
-                if (slot != null) {
-                    java.lang.reflect.Method getStackMethod = slot.getClass().getMethod("getStack");
-                    ItemStack stack = (ItemStack) getStackMethod.invoke(slot);
-                    if (!stack.isEmpty()) {
-                        capturedInput = stack.copy(); // Copy to preserve the item data
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Silently fail - will fall back to recipe ingredients
+    private void captureInputBeforeUse(
+        IInputHandler<?> inputHandler,
+        Object input,
+        int operations,
+        Operation<Void> original,
+        @Share("capturedInput") LocalRef<ItemStack> capturedInputRef
+    ) {
+        if (input instanceof ItemStack stack && !stack.isEmpty()) {
+            capturedInputRef.set(stack.copy());
         }
+        original.call(inputHandler, input, operations);
     }
 
     /**
@@ -71,7 +67,7 @@ public abstract class OneInputCachedRecipeMixin<RECIPE extends ItemStackToItemSt
         remap = false,
         require = 0
     )
-    private void onFinishProcessing(int operations, CallbackInfo ci) {
+    private void onFinishProcessing(int operations, CallbackInfo ci, @Share("capturedInput") LocalRef<ItemStack> capturedInputRef) {
         try {
             // Cast to access the recipe - use raw CachedRecipe to avoid type issues
             CachedRecipe<?> self = (CachedRecipe<?>) (Object) this;
@@ -102,8 +98,8 @@ public abstract class OneInputCachedRecipeMixin<RECIPE extends ItemStackToItemSt
             ItemStack output = recipe.getResultItem(level.registryAccess());
             
             // Use the captured input from HEAD injection
-            ItemStack input = capturedInput;
-            if (input.isEmpty()) {
+            ItemStack input = capturedInputRef.get();
+            if (input == null || input.isEmpty()) {
                 // Fallback to recipe ingredients
                 if (!recipe.getIngredients().isEmpty() && !recipe.getIngredients().get(0).isEmpty()) {
                     ItemStack[] matchingStacks = recipe.getIngredients().get(0).getItems();
