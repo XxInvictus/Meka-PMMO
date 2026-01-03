@@ -76,11 +76,18 @@ dependencies {
 
     implementation 'org.spongepowered:mixin:0.8.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly "io.github.llamalad7:mixinextras-common:0.5.2"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:0.5.2"
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.2")) {
+        jarJar.ranged(it, "[0.5.2,)")
+    }
     // PMMO from Modrinth
     implementation fg.deobf("maven.modrinth:project-mmo:${minecraft_version}-${pmmo_version}")
 
     // Mekanism from ModMaven
     implementation fg.deobf("mekanism:Mekanism:${minecraft_version}-${mekanism_version}.${mekanism_subversion}")
+
+    
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -101,6 +108,10 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 tasks.named('jar', Jar).configure {
+    // The plain jar is not the intended distribution artifact when using JarJar.
+    // Keep it available for debugging, but don't make it the default release jar.
+    archiveClassifier.set('slim')
+
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -117,10 +128,17 @@ tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'
 }
 
+// Make the JarJar output the primary release jar (no '-all' classifier)
+tasks.named('jarJar', Jar).configure {
+    archiveClassifier.set('')
+    finalizedBy 'reobfJarJar'
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact jar
+            // Publish the shaded (Jar-in-Jar) artifact as the primary release jar.
+            artifact tasks.named('jarJar')
         }
     }
     repositories {
