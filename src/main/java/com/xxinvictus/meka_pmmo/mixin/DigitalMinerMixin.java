@@ -1,5 +1,7 @@
 package com.xxinvictus.meka_pmmo.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.xxinvictus.meka_pmmo.Config;
 import mekanism.common.tile.machine.TileEntityDigitalMiner;
 import net.minecraft.core.BlockPos;
@@ -10,9 +12,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
 
@@ -35,22 +34,20 @@ public abstract class DigitalMinerMixin {
      * If PMMO cancels the event (skill requirements not met), we return false immediately
      * which causes the Digital Miner to skip this block without mining it.
      */
-    @Inject(
-        method = "canMine",
-        at = @At("HEAD"),
-        cancellable = true,
+    @WrapMethod(
+        method = "canMine(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)Z",
         remap = false,
-        require = 0  // Optional - won't crash if method not found
+        require = 0
     )
-    private void onCanMineHead(
+    private boolean wrapCanMine(
         BlockState state,
         BlockPos pos,
-        CallbackInfoReturnable<Boolean> cir
+        Operation<Boolean> original
     ) {
         try {
             // Check if both features are disabled (runtime check as fallback)
             if (!Config.enableDigitalMinerXP && !Config.enableDigitalMinerSkillRequirements) {
-                return; // Both features disabled, nothing to do
+                return original.call(state, pos); // Both features disabled, nothing to do
             }
             
             // Get the Digital Miner tile entity
@@ -58,20 +55,20 @@ public abstract class DigitalMinerMixin {
             
             // Get the level from the tile entity
             if (self.getLevel() == null || !(self.getLevel() instanceof ServerLevel)) {
-                return;
+                return original.call(state, pos);
             }
             
             ServerLevel level = (ServerLevel) self.getLevel();
             
             // Only process on server side
             if (level.isClientSide()) {
-                return;
+                return original.call(state, pos);
             }
             
             // Get the owner UUID
             UUID ownerUUID = self.getOwnerUUID();
             if (ownerUUID == null) {
-                return; // No owner, no XP
+                return original.call(state, pos); // No owner, no XP
             }
             
             // Get or create the player
@@ -82,7 +79,7 @@ public abstract class DigitalMinerMixin {
                 var profileCache = level.getServer().getProfileCache();
                 var profile = profileCache.get(ownerUUID);
                 if (profile.isEmpty()) {
-                    return; // Can't find player profile
+                    return original.call(state, pos); // Can't find player profile
                 }
                 // Create default ClientInformation for offline player (MC 1.21.1 requirement)
                 ClientInformation clientInfo = ClientInformation.createDefault();
@@ -105,14 +102,12 @@ public abstract class DigitalMinerMixin {
             if (Config.enableDigitalMinerSkillRequirements && event.isCanceled()) {
                 // Player doesn't meet skill requirements - prevent mining
                 // Return false immediately to stop the entire mining operation
-                cir.setReturnValue(false);
-                
                 if (Config.enableDebugLogging) {
                     org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
                         .debug("Digital Miner: Blocked mining {} at {} - owner {} does not meet PMMO skill requirements", 
                             state.getBlock().getName().getString(), pos, ownerUUID);
                 }
-                return;
+                return false;
             }
             
             if (Config.enableDebugLogging) {
@@ -127,5 +122,7 @@ public abstract class DigitalMinerMixin {
             org.apache.logging.log4j.LogManager.getLogger("MekaPMMO")
                 .warn("Failed to fire BreakEvent for Digital Miner XP", e);
         }
+
+        return original.call(state, pos);
     }
 }

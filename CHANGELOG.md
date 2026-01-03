@@ -36,6 +36,24 @@ but it is still a complete changelog containing the full release history.
 
 - TBD
 
+## [1.3.2] - 2026-01-02
+
+### Changed
+
+- Migrated mixin logic to use MixinExtras wrappers where appropriate for improved compatibility with other mods
+- Digital Miner mining validation hook now uses a method wrapper to preserve behavior while avoiding brittle cancellation patterns
+
+### Fixed
+
+- Energized Smelter input capture is now performed by wrapping Mekanism's input consumption call, removing reflection into handler internals
+- Processing context capture no longer depends on Mekanism field names; context is set by wrapping the holder check supplier call
+
+### Technical Details
+
+- `CachedRecipe.process()` now uses MixinExtras `@WrapMethod` (for guaranteed cleanup) + `@WrapOperation` (to capture the holder supplier instance)
+- `OneInputCachedRecipe.finishProcessing()` now captures input via `@WrapOperation` on `IInputHandler.use(...)` and shares it via `@Share`
+- Reflection used to locate the processing `BlockEntity` is cached per supplier class to reduce overhead
+
 ## [1.3.1] - 2025-12-04
 
 ### Fixed
@@ -155,6 +173,8 @@ but it is still a complete changelog containing the full release history.
 - Mekanism: 10.4.16.80
 - PMMO: 1.20.1-1.7.39
 
+[1.3.2]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.3.2
+[1.3.1]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.3.1
 [1.3.0]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.3.0
 [1.2.0]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.2.0
 [1.1.0]: https://github.com/XxInvictus/Meka-PMMO/releases/tag/1.20.1-1.1.0
