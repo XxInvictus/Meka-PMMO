@@ -108,6 +108,10 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 tasks.named('jar', Jar).configure {
+    // The plain jar is not the intended distribution artifact when using JarJar.
+    // Keep it available for debugging, but don't make it the default release jar.
+    archiveClassifier.set('slim')
+
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -124,10 +128,17 @@ tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'
 }
 
+// Make the JarJar output the primary release jar (no '-all' classifier)
+tasks.named('jarJar', Jar).configure {
+    archiveClassifier.set('')
+    finalizedBy 'reobfJarJar'
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact jar
+            // Publish the shaded (Jar-in-Jar) artifact as the primary release jar.
+            artifact tasks.named('jarJar')
         }
     }
     repositories {
